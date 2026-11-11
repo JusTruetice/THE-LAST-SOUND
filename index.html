@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Last Sound</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090B;--bg2:#141116;--bur:#4A1025;--cri:#A32643;--gold:#B89A68;--ivo:#E8DFD3;--gry:#77717A;--serif:"Cormorant Garamond",Georgia,serif;--sans:Jost,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);color:var(--ivo);font-family:var(--sans);font-weight:300;overflow-x:hidden;min-height:100%}
+#app{position:relative;min-height:100vh;min-height:100dvh;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);background:radial-gradient(ellipse at 50% 0,#1d0f18 0,var(--bg) 65%)}
+#app:after{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,#000 120%);z-index:5}
+.grain{position:fixed;inset:-50%;pointer-events:none;z-index:6;opacity:.09;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");animation:gr .6s steps(3) infinite}
+@keyframes gr{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}}
+#dust{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+#prog{position:fixed;top:0;left:0;right:0;display:flex;gap:4px;padding:calc(8px + env(safe-area-inset-top,0)) 12px 0;z-index:8}
+#prog i{flex:1;height:2px;background:#2a242c}#prog i.on{background:var(--gold)}
+#snd{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0));z-index:9;display:none}
+main{position:relative;z-index:2;max-width:880px;margin:0 auto;padding:44px 18px 70px;transition:opacity .6s}
+main.out{opacity:0}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:.04em}
+h1{font-size:clamp(2.6rem,11vw,5.2rem);line-height:1;text-align:center;color:var(--ivo);letter-spacing:.14em}
+h2{font-size:clamp(1.8rem,6vw,2.8rem);text-align:center;margin:6px 0 16px}h2 em{color:var(--gold)}
+p{line-height:1.7}.c{text-align:center}.note{color:var(--gry);font-size:.85rem;min-height:1.3em;margin-top:8px}
+.sub{text-align:center;color:var(--gold);letter-spacing:.3em;font-size:.72rem;margin:12px 0}
+.quote{font-family:var(--serif);font-style:italic;font-size:1.25rem;text-align:center;color:#cfc5b8;max-width:30rem;margin:16px auto 26px}
+button{font:500 .8rem var(--sans);letter-spacing:.14em;color:var(--ivo);background:transparent;border:1px solid var(--gry);padding:13px 20px;min-height:44px;cursor:pointer;transition:.25s}
+button:hover{border-color:var(--gold);color:var(--gold)}button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button.g{background:var(--bur);border-color:var(--cri)}button.g:hover{background:var(--cri);color:var(--ivo)}
+button[disabled]{opacity:.35;pointer-events:none}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0}
+.card{background:linear-gradient(var(--bg2),#0f0c11);border:1px solid #2a222b;padding:18px;margin-top:10px}
+.tabs{display:flex;gap:6px;margin-top:16px;overflow-x:auto}
+.tab{flex:1;min-width:0;padding:10px 4px;font-size:.66rem;border-color:#2a222b}.tab.on{border-color:var(--gold);color:var(--gold)}.tab.ok{background:#1b1319}.tab.ok:after{content:" ✓"}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.opt{letter-spacing:.06em;font-size:.85rem;text-align:left}.opt.on{border-color:var(--cri);background:var(--bur)}
+.opt.right{border-color:var(--gold);background:#2a2214}.opt.wrong{border-color:var(--cri);opacity:.5}
+canvas.wv{width:100%;height:60px;background:#0c0a0e;border:1px solid #221b23;display:block}
+.scene{width:100%;aspect-ratio:5/3;display:block;border:1px solid #2a222b;background:#0b090d}
+.lay{display:grid;grid-template-columns:1fr;gap:8px;padding:12px;border:1px solid #2a222b;background:var(--bg2);margin-top:8px}
+.lay .h{display:flex;justify-content:space-between;align-items:center;gap:8px}.lay .h b{font:400 1.15rem var(--serif);letter-spacing:.1em}
+.lay .h div{display:flex;gap:6px}.lay button{padding:8px 12px;min-height:40px;font-size:.7rem}
+.lay input{width:100%;accent-color:var(--cri);height:28px}.lay.mute{opacity:.45}
+@media(min-width:700px){.lay{grid-template-columns:150px 1fr 1fr 190px;align-items:center}}
+.ctr{position:fixed;inset:0;z-index:10;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;overflow:hidden}
+.ctr.on{display:flex}.ctr .num{font:400 min(40vw,16rem) var(--serif);color:var(--ivo);animation:pop 1s forwards}
+@keyframes pop{0%{opacity:0;transform:scale(1.3)}20%{opacity:1}100%{opacity:.1;transform:scale(.9)}}
+.frame{width:min(92vw,820px);position:relative;border:10px solid #000;outline:1px solid var(--gry);animation:flick .15s infinite}
+@keyframes flick{50%{opacity:.96}}
+.cred{font-family:var(--serif);font-size:1.4rem;line-height:2.2;color:var(--gold);animation:roll 7s linear forwards}
+@keyframes roll{from{transform:translateY(60vh)}to{transform:translateY(-60vh)}}
+.fade{opacity:0;animation:fi 2s forwards}@keyframes fi{to{opacity:1}}
+.award{text-align:center;position:relative;padding-top:10px}
+.beam{position:absolute;left:50%;top:-40px;width:130%;height:560px;transform:translateX(-50%);background:conic-gradient(from 160deg at 50% 0,transparent 0,rgba(232,223,211,.14) 20deg,transparent 40deg);pointer-events:none;animation:fi 3s forwards}
+.name{font:600 clamp(2.4rem,10vw,4.6rem) var(--serif);color:var(--gold);letter-spacing:.1em;margin:10px 0}
+.msg p{font-family:var(--serif);font-size:1.3rem;line-height:1.6;max-width:34rem;margin:0 auto 16px;color:#d8cebf}
+/* scene animation: 12s timeline. 3s = door, 7s = glass, 7s+ = storm */
+.scene .woman{animation:none}.scene .door{transform-box:fill-box;transform-origin:left center}
+.scene.run .woman{animation:walk 12s linear forwards}.scene.run .door{animation:dr 12s forwards}
+.scene.run .glass{animation:gl 12s forwards}.scene.run .shards{animation:sh 12s forwards}
+.scene.run .lt{animation:lt 12s forwards}.scene.run .rain{animation:rn 12s forwards}
+.shards,.rain{opacity:0}.lt{opacity:0}
+@keyframes walk{0%{transform:translateX(-90px)}25%{transform:translateX(120px)}100%{transform:translateX(150px)}}
+@keyframes dr{0%,25%{transform:scaleX(1)}38%,100%{transform:scaleX(.15)}}
+@keyframes gl{0%,56%{transform:translateY(0);opacity:1}62%{transform:translateY(62px);opacity:1}63%,100%{transform:translateY(62px);opacity:0}}
+@keyframes sh{0%,61%{opacity:0}62%,100%{opacity:1}}
+@keyframes lt{0%,62%{opacity:0}64%{opacity:.85}66%{opacity:.05}68%{opacity:.95}72%,100%{opacity:0}}
+@keyframes rn{0%,58%{opacity:0}70%,100%{opacity:.6}}
+.beamA{transform-origin:200px 300px;animation:sw 9s ease-in-out infinite alternate}@keyframes sw{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
+.sign{animation:neon 4s infinite}@keyframes neon{0%,92%,100%{opacity:1}94%{opacity:.4}96%{opacity:.9}98%{opacity:.5}}
+@media(prefers-reduced-motion:reduce){.grain,.sign,.beamA{animation:none}}
+</style></head><body>
+<div id="app"><canvas id="dust"></canvas><div class="grain"></div><div id="prog"></div><button id="snd" onclick="toggleAmb()">Ambience on</button><main id="stage"></main>
+<div class="ctr" id="ctr"></div></div>
+<script>
+/* ===== PERSONALIZE HERE ===== */
+const CONFIG={
+ name:"Anno",                      
+ award:"THE MASTER OF INVISIBLE MAGIC",
+ message:["Some people see the world. Some people hear it. And some people have the rare gift of making others feel what they hear.","You give life to silence. You turn ordinary moments into extraordinary stories. You create magic that people may never see, but will always feel.","May your next chapter be your most beautiful production yet."]
+};
+
+let AC,master,ambG,ambOn=true,ambNodes=null;
+function ctx(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.9;master.connect(AC.destination);ambG=AC.createGain();ambG.gain.value=0;ambG.connect(AC.destination)}if(AC.state==='suspended')AC.resume();return AC}
+function nb(d){const n=Math.floor(AC.sampleRate*d),b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=Math.random()*2-1;return b}
+function noise(o,t,d,p={}){const{type='lowpass',f=1000,fe,q=1,v=.5,a=.004}=p;const s=AC.createBufferSource();s.buffer=nb(d);const fl=AC.createBiquadFilter();fl.type=type;fl.Q.value=q;fl.frequency.setValueAtTime(f,t);if(fe)fl.frequency.exponentialRampToValueAtTime(fe,t+d);const g=AC.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(fl);fl.connect(g);g.connect(o);s.start(t);s.stop(t+d+.05)}
+function tone(o,t,d,p={}){const{type='sine',f=440,fe,v=.3,a=.004,bp}=p;const s=AC.createOscillator();s.type=type;s.frequency.setValueAtTime(f,t);if(fe)s.frequency.exponentialRampToValueAtTime(fe,t+d);const g=AC.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+d);let n=s;if(bp){const b=AC.createBiquadFilter();b.type='bandpass';b.frequency.value=bp;b.Q.value=6;s.connect(b);n=b}n.connect(g);g.connect(o);s.start(t);s.stop(t+d+.05)}
+const steps=(o,t,fn)=>[0,.55,1.1,1.65].forEach((d,i)=>fn(o,t+d+(i%2?.03:0)));
+const SD={
+ footsteps:{
+  soft:(o,t)=>steps(o,t,(o,t)=>{noise(o,t,.14,{f:350,v:.8});tone(o,t,.15,{f:110,fe:50,v:.5})}),
+  heels:(o,t)=>steps(o,t,(o,t)=>{noise(o,t,.05,{type:'highpass',f:2500,v:.6});tone(o,t,.06,{type:'triangle',f:1600,v:.12});noise(o,t+.2,.05,{type:'highpass',f:2500,v:.15})}),
+  boots:(o,t)=>steps(o,t,(o,t)=>{noise(o,t,.22,{f:500,v:1});tone(o,t,.22,{f:75,fe:38,v:.7})})},
+ door:{
+  creak:(o,t)=>{tone(o,t,1.8,{type:'sawtooth',f:150,fe:420,v:.14,a:.3,bp:650});tone(o,t+.2,1.4,{type:'sawtooth',f:230,fe:130,v:.08,a:.3,bp:900});noise(o,t+1.8,.25,{f:300,v:.5})},
+  slam:(o,t)=>{noise(o,t,.7,{f:420,v:1.2});tone(o,t,.6,{f:62,fe:28,v:.9})},
+  squeak:(o,t)=>{tone(o,t,.6,{f:1700,fe:2700,v:.12,bp:2200});tone(o,t+.6,.5,{f:2700,fe:1500,v:.1,bp:2000});tone(o,t+1.2,.05,{type:'square',f:700,v:.15});noise(o,t+1.25,.15,{f:600,v:.5})}},
+ object:{
+  shatter:(o,t)=>{noise(o,t,.6,{type:'highpass',f:3200,v:.7});[.05,.12,.2,.33,.45].forEach(d=>noise(o,t+d,.1,{type:'highpass',f:5500,v:.4}));tone(o,t,.4,{f:3300,v:.05})},
+  ceramic:(o,t)=>{[0,.08,.16,.3].forEach((d,i)=>{noise(o,t+d,.14,{type:'bandpass',f:1800+i*300,q:2,v:.7});tone(o,t+d,.1,{type:'triangle',f:800+i*90,v:.12})})},
+  crystal:(o,t)=>{noise(o,t,.03,{type:'highpass',f:4000,v:.4});[2093,3136,4186].forEach((f,i)=>tone(o,t,2,{f,v:.1/(i+1)}))}},
+ storm:{
+  rumble:(o,t)=>{noise(o,t,6,{f:140,fe:50,v:1.6,a:1.5});noise(o,t+2.5,.4,{f:900,v:.4})},
+  rain:(o,t)=>{noise(o,t,6,{type:'highpass',f:2800,v:.35,a:1});noise(o,t,6,{type:'bandpass',f:900,v:.15,a:1})},
+  crack:(o,t)=>{noise(o,t,.35,{f:3500,fe:200,v:1,a:.002});noise(o,t+.15,4.5,{f:200,fe:50,v:1.2,a:.3})}},
+ amb:{wind:(o,t)=>{noise(o,t,6,{type:'bandpass',f:380,fe:600,q:.8,v:.35,a:2});tone(o,t,6,{f:55,v:.25,a:2})}},
+ q:{
+  celery:(o,t)=>[0,.4,.7].forEach(d=>noise(o,t+d,.12,{type:'bandpass',f:1300,q:3,v:1})),
+  coco:(o,t)=>[0,.3,.5,.8,1,1.3].forEach((d,i)=>{tone(o,t+d,.1,{type:'triangle',f:i%2?520:680,fe:300,v:.5});noise(o,t+d,.05,{f:2000,v:.4})}),
+  snow:(o,t)=>[0,.45,.9,1.35].forEach(d=>noise(o,t+d,.2,{type:'bandpass',f:3200,q:1.5,v:.7,a:.01})),
+  rain:(o,t)=>{for(let i=0;i<30;i++)noise(o,t+Math.random()*2,.03,{type:'highpass',f:2500+Math.random()*3000,v:.5})}}
+};
+const M=[
+ {k:'footsteps',t:'Footsteps',d:'She crosses the marble hall. Choose what her steps sound like, or record your own.',o:[['soft','Velvet slippers'],['heels','Marble heels'],['boots','Leather boots']],f:'footsteps'},
+ {k:'door',t:'The old door',d:'A wooden door, unopened for several years, finally gives way.',o:[['creak','Slow creak'],['slam','Heavy slam'],['squeak','Rusted hinge']]},
+ {k:'object',t:'Falling object',d:'A glass object slips from the table. Decide how it breaks.',o:[['shatter','Shattering glass'],['ceramic','Cracked ceramic'],['crystal','Crystal ring']]},
+ {k:'storm',t:'The storm',d:'Far off, the weather is turning. Choose its voice.',o:[['rumble','Distant rumble'],['rain','Steady rain'],['crack','Thunder crack']]}];
+const C={};M.forEach(m=>C[m.k]={sel:m.o[0][0],use:'synth',rec:null,ok:false});
+function playChoice(k,o,t){const c=C[k];if(c.use==='rec'&&c.rec){const s=AC.createBufferSource();s.buffer=c.rec;s.connect(o);s.start(t)}else SD[k][c.sel](o,t)}
+function setAmb(v){if(!AC)return;if(v&&!ambNodes&&ambOn){const g=ambG;const a=AC.createOscillator(),b=AC.createOscillator();a.frequency.value=55;b.frequency.value=55.7;a.type=b.type='sine';const n=AC.createBufferSource();n.buffer=nb(4);n.loop=true;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=200;const ng=AC.createGain();ng.gain.value=.25;a.connect(g);b.connect(g);n.connect(f);f.connect(ng);ng.connect(g);a.start();b.start();n.start();ambNodes=[a,b,n]}ambG.gain.setTargetAtTime(v&&ambOn?.07:0,AC.currentTime,.6)}
+function toggleAmb(){ambOn=!ambOn;$('snd').textContent=ambOn?'Ambience on':'Ambience off';setAmb(ambOn)}
+/* ===== HELPERS ===== */
+const $=id=>document.getElementById(id);let cur=0,screen='intro',rk=null,mr=null,anaMic=null,raf=0,laySt=[];
+function bar(n){$('prog').innerHTML=[0,1,2,3,4].map(i=>`<i class="${i<n?'on':''}"></i>`).join('')}
+function go(name,n){screen=name;const s=$('stage');s.classList.add('out');setTimeout(()=>{stopLab();cut();s.innerHTML=SC[name]();s.classList.remove('out');window.scrollTo(0,0);bar(n);if(AFTER[name])AFTER[name]()},600)}
+function scene(){return`<svg class="scene" id="sc" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A woman walks through an abandoned corridor toward an old door">
+<rect width="400" height="240" fill="#0d0a0f"/><polygon points="0,0 400,0 400,240 0,240" fill="#141116"/>
+<polygon points="0,0 120,60 280,60 400,0" fill="#0a080c"/><polygon points="0,240 120,180 280,180 400,240" fill="#1a1318"/>
+<g stroke="#2a222b" stroke-width="1"><line x1="0" y1="0" x2="120" y2="60"/><line x1="400" y1="0" x2="280" y2="60"/><line x1="0" y1="240" x2="120" y2="180"/><line x1="400" y1="240" x2="280" y2="180"/></g>
+<rect x="150" y="70" width="100" height="110" fill="#06050a" stroke="#4A1025" stroke-width="3"/><rect class="door" x="150" y="70" width="100" height="110" fill="#3a2418" stroke="#B89A68" stroke-width="1"/>
+<circle cx="238" cy="128" r="3" fill="#B89A68"/><rect x="36" y="38" width="62" height="86" fill="#0a0d16" stroke="#77717A"/>
+<g class="rain" stroke="#9aa" stroke-width=".6"><line x1="46" y1="44" x2="42" y2="70"/><line x1="60" y1="50" x2="56" y2="80"/><line x1="76" y1="44" x2="72" y2="76"/><line x1="86" y1="60" x2="82" y2="96"/></g>
+<rect class="lt" x="36" y="38" width="62" height="86" fill="#E8DFD3"/>
+<rect x="300" y="150" width="60" height="6" fill="#2a1a14"/><rect x="310" y="156" width="4" height="40" fill="#2a1a14"/><rect x="346" y="156" width="4" height="40" fill="#2a1a14"/>
+<g class="glass"><path d="M322 150 l3 -16 h12 l3 16z" fill="none" stroke="#E8DFD3" stroke-width="1.5"/></g>
+<g class="shards" stroke="#E8DFD3" stroke-width="1.5"><path d="M310 212 l6 -4 M326 214 l5 3 M340 211 l4 -5 M318 217 l8 0"/></g>
+<g class="woman"><ellipse cx="0" cy="203" rx="22" ry="3" fill="#000" opacity=".5" transform="translate(40 0)"/><g transform="translate(40 0)"><path d="M-9 120 q9 -8 18 0 l12 78 h-42z" fill="#A32643"/><circle cx="0" cy="110" r="8" fill="#0a080c" stroke="#B89A68" stroke-width=".8"/><path d="M-8 106 q-6 20 -4 34 M8 106 q6 20 4 34" stroke="#0a080c" stroke-width="4" fill="none"/></g></g>
+<rect width="400" height="240" fill="url(#v)"/><defs><radialGradient id="v"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient></defs></svg>`}
+function runScene(sound,done){const s=$('sc');s.classList.remove('run');void s.getBoundingClientRect();s.classList.add('run');if(sound){ctx();setAmb(false);const t=AC.currentTime+.1,b=bus();playChoice('footsteps',b,t+.3);playChoice('footsteps',b,t+1.9);playChoice('door',b,t+3);playChoice('object',b,t+6.9);playChoice('storm',b,t+7.2)}setTimeout(()=>{done&&done()},12500)}
+/* ===== SCREENS ===== */
+const SC={
+intro:()=>`<div class="c"><svg viewBox="0 0 400 300" style="width:100%;max-width:520px" role="img" aria-label="An abandoned cinema at night">
+<defs><linearGradient id="bm" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E8DFD3" stop-opacity=".35"/><stop offset="1" stop-color="#E8DFD3" stop-opacity="0"/></linearGradient></defs>
+<rect width="400" height="300" fill="#0b090d"/><g fill="#fff" opacity=".5"><circle cx="40" cy="30" r="1"/><circle cx="330" cy="20" r="1"/><circle cx="360" cy="70" r="1"/><circle cx="90" cy="60" r="1"/></g>
+<g class="beamA"><polygon points="200,300 150,0 250,0" fill="url(#bm)"/></g>
+<rect x="60" y="90" width="280" height="210" fill="#141116" stroke="#2a222b"/><path d="M50 90 h300 l-20 -26 h-260z" fill="#1d0f18" stroke="#B89A68" stroke-width="1"/>
+<g class="sign"><rect x="95" y="100" width="210" height="36" fill="#09090B" stroke="#B89A68"/><text x="112" y="123" textLength="176" lengthAdjust="spacing" font-family="Cormorant Garamond,serif" font-size="17" fill="#B89A68">THE LAST SOUND</text></g>
+<g fill="#B89A68"><circle cx="100" cy="143" r="2"/><circle cx="130" cy="143" r="2"/><circle cx="160" cy="143" r="2"/><circle cx="240" cy="143" r="2"/><circle cx="270" cy="143" r="2"/><circle cx="300" cy="143" r="2"/></g>
+<rect x="160" y="170" width="80" height="130" fill="#09090B" stroke="#4A1025" stroke-width="2"/><path d="M162 172 q14 50 -2 128 h38 v-128z" fill="#4A1025"/><path d="M238 172 q-14 50 2 128 h-38 v-128z" fill="#A32643"/>
+<g fill="#0b090d" stroke="#2a222b"><rect x="80" y="170" width="50" height="60"/><rect x="270" y="170" width="50" height="60"/></g></svg>
+<h1 class="fade">THE LAST SOUND</h1><p class="sub fade" style="animation-delay:1s">A CINEMATIC FOLEY EXPERIENCE</p>
+<p class="quote fade" style="animation-delay:2s">A forgotten film. A thousand missing sounds. One person who can bring them back.</p>
+<div class="fade" style="animation-delay:3s"><button class="g" onclick="enter()">ENTER THE CINEMA</button></div>
+<p class="note" style="margin-top:20px">Best with sound on. Nothing plays until you press a button.</p></div>`,
+letter:()=>`<div class="c" style="padding-top:12vh"><div class="msg"><p class="fade" style="font-size:1.6rem">Dear Sound Architect,</p><p class="fade" style="animation-delay:1.6s">The world sees what happens on screen. But only you know what makes us feel it.</p><p class="fade" style="animation-delay:3.4s">Tonight, a forgotten story needs your ears.</p><p class="fade" style="animation-delay:5s">Are you ready?</p></div><div class="fade" style="animation-delay:6s"><button class="g" onclick="go('ch1',1)">BEGIN THE EXPERIENCE</button></div></div>`,
+ch1:()=>{const m=M[cur],c=C[m.k],all=M.every(x=>C[x.k].ok);return`<h2>Chapter One<br><em>The Silent Scene</em></h2>${scene()}
+<div class="row"><button onclick="watch()">Watch the scene (${M.filter(x=>C[x.k].ok).length} of 4 sounds restored)</button></div>
+<div class="tabs">${M.map((x,i)=>`<button class="tab ${i==cur?'on':''} ${C[x.k].ok?'ok':''}" onclick="cur=${i};go1()">${x.t}</button>`).join('')}</div>
+<div class="card"><h3>${m.t}</h3><p>${m.d}</p><div class="opts">${m.o.map(([id,n])=>`<button class="opt ${c.use=='synth'&&c.sel==id?'on':''}" onclick="pick('${m.k}','${id}')">${n}</button>`).join('')}${c.rec?`<button class="opt ${c.use=='rec'?'on':''}" onclick="useRec('${m.k}')">Your recording</button>`:''}</div>
+<canvas class="wv" id="wv" width="600" height="60"></canvas>
+<div class="row"><button onclick="prev('${m.k}')">Preview</button><button onclick="toggleRec('${m.k}')">${rk==m.k?'Stop recording':c.rec?'Record again':'Record with microphone'}</button><button class="g" onclick="confirmM('${m.k}')">${c.ok?'Confirmed':'Confirm'}</button></div>
+<p class="note" id="msg">Microphone permission is only requested when you press Record.</p></div>
+<div class="row"><button class="g" ${all?'':'disabled'} onclick="go('ch2',2)">${all?'CONTINUE TO CHAPTER TWO':'Confirm all four sounds to continue'}</button></div>`},
+ch2:()=>{qi=0;score=0;return`<h2>Chapter Two<br><em>The Foley Detective</em></h2><div id="qa"></div>`},
+ch3:()=>`<h2>Chapter Three<br><em>The Sound Lab</em></h2>${scene()}
+<div class="row"><button class="g" id="mp" onclick="masterPlay()">MASTER PLAY</button><button onclick="resetLab()">Reset</button></div><div id="lays"></div>
+<div class="row" style="margin-top:22px"><button class="g" onclick="go('ch4',4)">CONTINUE TO THE FINAL CUT</button></div>`,
+ch4:()=>`<h2>Chapter Four<br><em>The Final Cut</em></h2><p class="c" style="max-width:30rem;margin:0 auto 20px">The scene returns to the screen with every sound you chose. Lights down. Headphones recommended.</p><div class="row"><button class="g" onclick="finalCut()">ROLL THE FILM</button></div>`,
+award:()=>`<div class="award"><div class="beam"></div><p class="sub fade" style="animation-delay:.5s">AND THE AWARD FOR THE MOST EXTRAORDINARY SOUND DESIGN GOES TO...</p>
+<svg viewBox="0 0 120 200" width="120" class="fade" style="animation-delay:2.5s" role="img" aria-label="Golden award statuette"><defs><linearGradient id="au" x1="0" x2="1"><stop offset="0" stop-color="#7a6240"/><stop offset=".5" stop-color="#E8D3a0"/><stop offset="1" stop-color="#7a6240"/></linearGradient></defs><rect x="30" y="170" width="60" height="22" fill="url(#au)"/><rect x="42" y="150" width="36" height="22" fill="url(#au)"/><path d="M60 24 c10 0 14 8 10 16 c14 10 16 40 8 70 l-10 40 h-16 l-10 -40 c-8 -30 -6 -60 8 -70 c-4 -8 0 -16 10 -16z" fill="url(#au)"/><rect x="54" y="48" width="12" height="40" rx="6" fill="#09090B" opacity=".55"/><rect x="58" y="80" width="4" height="30" fill="#09090B" opacity=".55"/></svg>
+<div class="name fade" style="animation-delay:4s">${CONFIG.name}</div><p class="sub fade" style="animation-delay:5s">${CONFIG.award}</p>
+<div class="msg" style="margin-top:30px">${CONFIG.message.map((p,i)=>`<p class="fade" style="animation-delay:${7+i*3}s">${p}</p>`).join('')}<p class="fade" style="animation-delay:16s;font-size:2rem;color:var(--gold)">HAPPY BIRTHDAY!</p></div>
+<p class="sub fade" style="animation-delay:18.5s">THE END... OR JUST THE BEGINNING?</p><div class="fade" style="animation-delay:19s"><button onclick="replay()">Replay experience</button></div></div>`
+};
+const AFTER={ch1:()=>drawIdle(),ch3:()=>buildLab(),award:()=>{ctx();bloom()}};
+/* ===== ACTIONS ===== */
+function enter(){ctx();$('snd').style.display='block';setAmb(true);go('letter',0)}
+function go1(){cut();const s=$('stage');s.innerHTML=SC.ch1();drawIdle()}
+function watch(){const s=$('sc');runScene(true)}
+function pick(k,id){C[k].sel=id;C[k].use='synth';C[k].ok=false;go1();prev(k)}
+function useRec(k){C[k].use='rec';C[k].ok=false;go1();prev(k)}
+/* ONE preview at a time: every preview plays through its own bus. cut() silences and disconnects it instantly, so nothing overlaps or loops. */
+let pv=null;
+function cut(){if(!pv)return;const g=pv;pv=null;try{g.gain.cancelScheduledValues(0);g.gain.setValueAtTime(0,AC.currentTime)}catch(e){}try{g.disconnect()}catch(e){}}
+function bus(){ctx();cut();pv=AC.createGain();pv.connect(master);return pv}
+function prev(k){setAmb(false);playChoice(k,bus(),AC.currentTime+.05)}
+function confirmM(k){C[k].ok=true;const n=M.findIndex(x=>!C[x.k].ok);if(n>=0)cur=n;go1()}
+function msg(t){const e=$('msg');if(e)e.textContent=t}
+async function toggleRec(k){
+ if(rk){mr&&mr.state==='recording'&&mr.stop();return}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){msg('Recording is not available in this browser. Use one of the built-in sounds instead.');return}
+ try{const st=await navigator.mediaDevices.getUserMedia({audio:true});ctx();rk=k;const ch=[];mr=new MediaRecorder(st);mr.ondataavailable=e=>ch.push(e.data);
+  const an=AC.createAnalyser();an.fftSize=256;AC.createMediaStreamSource(st).connect(an);anaMic=an;
+  mr.onstop=async()=>{st.getTracks().forEach(t=>t.stop());anaMic=null;rk=null;try{C[k].rec=await AC.decodeAudioData(await new Blob(ch).arrayBuffer());C[k].use='rec';C[k].ok=false;go1();msg('Recorded. Press Preview to listen, then Confirm.')}catch(e){go1();msg('Could not read that recording. Try again, or use a built-in sound.')}};
+  mr.start();go1();msg('Recording... make your sound (up to 6 seconds).');setTimeout(()=>mr&&mr.state==='recording'&&mr.stop(),6000);liveWave()
+ }catch(e){rk=null;msg('Microphone blocked or unavailable. Pick one of the built-in sounds and confirm it.')}}
+function liveWave(){const cv=$('wv');if(!cv||!anaMic)return;const g=cv.getContext('2d'),d=new Uint8Array(anaMic.fftSize);anaMic.getByteTimeDomainData(d);g.clearRect(0,0,600,60);g.strokeStyle='#A32643';g.lineWidth=2;g.beginPath();for(let i=0;i<d.length;i++){const y=d[i]/255*60;i?g.lineTo(i*600/d.length,y):g.moveTo(0,y)}g.stroke();requestAnimationFrame(liveWave)}
+function drawIdle(){const cv=$('wv');if(!cv)return;const g=cv.getContext('2d');g.strokeStyle='#4A1025';g.beginPath();g.moveTo(0,30);g.lineTo(600,30);g.stroke()}
+/* Chapter two */
+let qi=0,score=0;
+const Q=[
+ {s:'celery',q:'Listen closely. What creates the sound of breaking bones in movies?',o:['Celery','Paper','Glass'],a:0,f:'Snapped celery gives the wet, fibrous crack of a bone.'},
+ {s:'coco',q:'A rider gallops past. How can Foley artists recreate horse footsteps?',o:['Coconut shells','Metal chains','Wooden blocks'],a:0,f:'Two coconut halves, clapped on a hard surface, have been the horse since radio drama.'},
+ {s:'snow',q:'Fresh snow crunches underfoot. What can recreate footsteps on snow?',o:['Cornstarch or similar powder','Water','Coins'],a:0,f:'Squeezing cornstarch in a pouch makes the squeak of cold snow.'},
+ {s:'rain',q:'Something taps against the glass. How can rain hitting a window be recreated?',o:['Fingertips tapping a surface','A metal spoon','A plastic bottle'],a:0,f:'Fingertips drumming lightly on a surface read as raindrops on a window.'}];
+function quiz(){const q=Q[qi];$('qa').innerHTML=`<div class="card"><p class="sub" style="text-align:left;margin:0 0 10px">Evidence ${qi+1} of ${Q.length}</p><div class="row" style="justify-content:flex-start"><button onclick="hear()">Hear the evidence</button></div><h3 style="font-size:1.5rem;margin:8px 0 12px">${q.q}</h3><div class="opts" id="qo">${q.o.map((t,i)=>`<button class="opt" onclick="ans(${i})">${t}</button>`).join('')}</div><p id="qf" class="note"></p><div id="qn"></div></div>`;hear()}
+function hear(){setAmb(false);SD.q[Q[qi].s](bus(),AC.currentTime+.05)}
+function ans(i){const q=Q[qi];[...$('qo').children].forEach((b,j)=>{b.disabled=true;b.classList.add(j==q.a?'right':j==i?'wrong':'x');b.style.opacity=j==q.a||j==i?1:.4});if(i==q.a){score++;tone(master,AC.currentTime,.5,{f:880,v:.1});tone(master,AC.currentTime+.1,.6,{f:1320,v:.08})}else tone(master,AC.currentTime,.5,{f:130,fe:80,v:.2,type:'triangle'});
+ $('qf').textContent=(i==q.a?'Case closed. ':'Not quite. The answer was '+q.o[q.a]+'. ')+q.f;$('qn').innerHTML=`<div class="row"><button class="g" onclick="nextQ()">${qi<Q.length-1?'Next clue':'Close the case'}</button></div>`}
+function nextQ(){if(qi<Q.length-1){qi++;quiz()}else $('qa').innerHTML=`<div class="card c"><h3 style="font-size:1.8rem">Case closed: ${score} of ${Q.length} solved</h3><p>You know how the invisible gets made. Now build the soundscape.</p><div class="row"><button class="g" onclick="go('ch3',3)">ENTER THE SOUND LAB</button></div></div>`}
+AFTER.ch2=()=>quiz();
+/* Chapter three: layers */
+const LAY=[['Ambience',o=>SD.amb.wind(o,AC.currentTime+.02),6],['Footsteps',o=>playChoice('footsteps',o,AC.currentTime+.02),3.2],['Objects',o=>playChoice('object',o,AC.currentTime+.02),7],['Impacts',o=>playChoice('door',o,AC.currentTime+.02),8],['Atmosphere',o=>playChoice('storm',o,AC.currentTime+.02),7]];
+function buildLab(){ctx();setAmb(false);laySt=LAY.map((l,i)=>{const g=AC.createGain(),a=AC.createAnalyser();a.fftSize=128;g.connect(a);a.connect(master);g.gain.value=.7;return{g,a,vol:.7,mute:false,on:false,timer:null}});
+ $('lays').innerHTML=LAY.map((l,i)=>`<div class="lay" id="ly${i}"><div class="h"><b>${l[0]}</b><div><button id="pb${i}" onclick="lt(${i})">Play</button><button onclick="lm(${i})" id="mb${i}">Mute</button></div></div><input type="range" min="0" max="100" value="70" aria-label="${l[0]} volume" oninput="lv(${i},this.value)"><canvas class="wv" id="lc${i}" width="300" height="40" style="height:40px"></canvas></div>`).join('');lab()}
+function fire(i){if(laySt[i])LAY[i][1](laySt[i].g)}
+function lstart(i){const s=laySt[i];if(s.on)return;s.on=true;fire(i);s.timer=setInterval(()=>fire(i),LAY[i][2]*1000);$('pb'+i)&&($('pb'+i).textContent='Pause')}
+function lstop(i){const s=laySt[i];if(!s)return;s.on=false;clearInterval(s.timer);$('pb'+i)&&($('pb'+i).textContent='Play')}
+function lt(i){laySt[i].on?lstop(i):lstart(i);sceneSync()}
+function lm(i){const s=laySt[i];s.mute=!s.mute;s.g.gain.value=s.mute?0:s.vol;$('ly'+i).classList.toggle('mute',s.mute);$('mb'+i).textContent=s.mute?'Unmute':'Mute'}
+function lv(i,v){const s=laySt[i];s.vol=v/100;if(!s.mute)s.g.gain.value=s.vol}
+function sceneSync(){const any=laySt.some(s=>s.on);const sc=$('sc');if(any&&!sc.classList.contains('run')){sc.classList.add('run')}else if(!any)sc.classList.remove('run');$('mp').textContent=any?'STOP ALL':'MASTER PLAY'}
+function masterPlay(){if(laySt.some(s=>s.on)){laySt.forEach((s,i)=>lstop(i));sceneSync();return}const sc=$('sc');sc.classList.remove('run');void sc.getBoundingClientRect();LAY.forEach((l,i)=>lstart(i));sceneSync()}
+function resetLab(){laySt.forEach((s,i)=>{lstop(i);s.vol=.7;s.mute=false;s.g.gain.value=.7;$('ly'+i).classList.remove('mute');$('mb'+i).textContent='Mute';$('ly'+i).querySelector('input').value=70});sceneSync()}
+function lab(){cancelAnimationFrame(raf);const f=()=>{if(screen!=='ch3')return;laySt.forEach((s,i)=>{const cv=$('lc'+i);if(!cv)return;const g=cv.getContext('2d'),d=new Uint8Array(s.a.frequencyBinCount);s.a.getByteTimeDomainData(d);g.clearRect(0,0,300,40);g.strokeStyle=s.mute?'#4a444c':s.on?'#B89A68':'#4A1025';g.beginPath();for(let j=0;j<d.length;j++){const y=d[j]/255*40;j?g.lineTo(j*300/d.length,y):g.moveTo(0,y)}g.stroke()});raf=requestAnimationFrame(f)};f()}
+function stopLab(){laySt.forEach((s,i)=>{clearInterval(s.timer);s.on=false});cancelAnimationFrame(raf)}
+/* Chapter four and finale */
+function finalCut(){ctx();setAmb(false);const c=$('ctr');c.classList.add('on');let n=3;c.innerHTML=`<div class="num" id="n">3</div>`;const iv=setInterval(()=>{n--;if(n>0){c.innerHTML=`<div class="num">${n}</div>`;tone(master,AC.currentTime,.1,{f:1000,v:.1})}else{clearInterval(iv);c.innerHTML=`<div class="frame">${scene()}</div><p class="note" style="margin-top:16px">Your sound design</p>`;setTimeout(()=>runScene(true,credits),300)}},1000);tone(master,AC.currentTime,.1,{f:1000,v:.1})}
+function credits(){const c=$('ctr');c.innerHTML=`<div class="cred">Sound Design<br>${CONFIG.name}<br><br>Foley<br>${CONFIG.name}<br><br>Mixed live, by hand<br><br></div>`;setTimeout(()=>{c.innerHTML=`<h2 class="fade" style="font-size:2.2rem">THE SOUND HAS RETURNED.</h2><p class="fade c" style="animation-delay:2s;letter-spacing:.14em;max-width:26rem">YOU DIDN'T JUST HEAR THE STORY. YOU MADE IT ALIVE.</p><div class="fade" style="animation-delay:4s;margin-top:24px"><button class="g" onclick="$('ctr').classList.remove('on');go('award',5)">CONTINUE</button></div>`},7200)}
+function bloom(){const t=AC.currentTime+.1;[261.6,329.6,392,523.3].forEach((f,i)=>tone(master,t+i*.15,4,{f,v:.07,a:.5,type:'triangle'}))}
+function replay(){M.forEach(m=>{C[m.k]={sel:m.o[0][0],use:'synth',rec:null,ok:false}});cur=0;setAmb(true);go('intro',0)}
+/* dust */
+(function(){const cv=$('dust'),g=cv.getContext('2d');let W,H,P=[];function sz(){W=cv.width=innerWidth;H=cv.height=innerHeight}sz();addEventListener('resize',sz);for(let i=0;i<45;i++)P.push({x:Math.random(),y:Math.random(),r:Math.random()*1.4+.3,s:Math.random()*.0004+.0001});
+if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;(function f(){g.clearRect(0,0,W,H);g.fillStyle='rgba(232,223,211,.35)';P.forEach(p=>{p.y-=p.s;p.x+=Math.sin(p.y*20)*.0003;if(p.y<0)p.y=1;g.beginPath();g.arc(p.x*W,p.y*H,p.r,0,7);g.fill()});requestAnimationFrame(f)})()})();
+$('stage').innerHTML=SC.intro();bar(0);
+</script></body></html>
